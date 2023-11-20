@@ -338,8 +338,6 @@ public:
 	void Multimodal_explore_Ephysi(vector<core::pose::Pose> &storage_pose, vector< double >& storage_pose_energy, vector< double >& population_Cscore, vector< vector<double> > &DMscore_map);
 	void Multimodal_explore(vector<core::pose::Pose> &storage_pose, vector< double >& population_Cscore, vector< vector<double> > &DMscore_map);
 	void Multimodal_maintain(vector<core::pose::Pose> &population, vector< double >& population_energy, vector< double >& population_Cscore, int index_i);
-	vector<core::pose::Pose> Modal_merging(vector<core::pose::Pose> &population, vector<core::pose::Pose> &top_population, vector<core::pose::Pose> &center_population, 
-					      vector< vector<core::pose::Pose> > &vec_top_modal, double &cut_dmscore);
 	void Multimodal_enhance_c(vector<core::pose::Pose> &population, vector<double> &population_energy, vector<double> &population_Cscore, int enhance_g, int index_i);
 	
 	bool boltzmann_accept( double const &targetEnergy, double const &trialEnergy );
