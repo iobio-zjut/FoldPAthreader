@@ -375,24 +375,24 @@ void ClassicAbinitio::apply( core::pose::Pose & pose ) {
 	ss << pdb_num1;
 	ss >> str;
 	storage_pose[0].dump_pdb(name+str+suf);
-	out_one << pdb_num1 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[0]) << endl;
-	out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[0]) << endl;
+	out_one << pdb_num1 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[0]) << '\t' << Distance_score(storage_pose[0])/lenth_of_sequence << endl;
+	// out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[0]) << endl;
 	pdb_num1++; 
 
 	name = "output_pdb2/model_";
 	ss << pdb_num2;
 	ss >> str;
 	storage_pose[1].dump_pdb(name+str+suf);
-	out_two << pdb_num2 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[1]) << endl;
-	out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[1]) << endl;
+	out_two << pdb_num2 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[1]) << '\t' << Distance_score(storage_pose[1])/lenth_of_sequence << endl;
+	// out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[1]) << endl;
 	pdb_num2++; 
 
 	name = "output_pdb3/model_";
 	ss << pdb_num3;
 	ss >> str;
 	storage_pose[2].dump_pdb(name+str+suf);
-	out_thr << pdb_num3 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[2]) << endl;
-	out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[2]) << endl;
+	out_thr << pdb_num3 << '\t' << "ini- " << '\t' << (*score_stage4_)(storage_pose[2]) << '\t' << Distance_score(storage_pose[2])/lenth_of_sequence << endl;
+	// out_rmsd_energy << "ini- " << '\t' << (*score_stage4_)(storage_pose[2]) << endl;
 	pdb_num3++; 
     
 	///====================================stage2=======================================
@@ -457,7 +457,8 @@ void ClassicAbinitio::apply( core::pose::Pose & pose ) {
 void 
 ClassicAbinitio::Multimodal_explore_Ephysi(vector<core::pose::Pose> &storage_pose, int Gen){
 ///================================ @Multimodal_explore ================================
-	KT_C = 2;
+	KT_E = 10;
+	KT_C = 5;
 	
  	vector< vector<double> > DMscore_map( calculate_population_DMscore(storage_pose) );
 	vector<double> storage_pose_Cscore( calculate_population_Cscore(storage_pose) );
@@ -542,6 +543,7 @@ ClassicAbinitio::Multimodal_maintain(vector<core::pose::Pose> &storage_pose){
 void 
 ClassicAbinitio::Multimodal_enhance_c(){
 ///================================ @Multimodal_enhance_c ================================
+	KT_E = 10;
 	KT_C = 2;
 	
 	for (Size m = 0; m < Vec_modal_contact.size(); m++){
@@ -583,62 +585,23 @@ ClassicAbinitio::Multimodal_explore_Ephysi(vector< core::pose::Pose >& storage_p
 	for ( int i = 0; i < NP_; ++i){
 		int trialTimes ( 0 );
 		core::pose::Pose trialPose;
-	
+
 		int base( numeric::random::rg().random_range(0, NP_ - 1) );
 		core::pose::Pose base_pose( storage_pose[base] );
-		
-		///====================== @Fragment_recombination =====================
-		int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
-		int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
-		while ( base == i )
-			base = numeric::random::rg().random_range(0, NP_ - 1);
-		while ( rand2 == base || rand2 == i )
-			rand2 = numeric::random::rg().random_range(0, NP_ - 1);
-		while ( rand3 == base || rand3 == rand2 || rand3 == i )
-			rand3 = numeric::random::rg().random_range(0, NP_ - 1);
-		
-		core::pose::Pose rand2_pose( storage_pose[rand2] );
-		core::pose::Pose rand3_pose( storage_pose[rand3] );
-		
-		int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		while ( rand_w2 == rand_w1 )
-			rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-		while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
-			rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-		
-		for (int r = rand_w1; r < rand_w1 + frag_; ++r){
-			base_pose.set_phi( r, rand2_pose.phi( r ) );
-			base_pose.set_psi( r, rand2_pose.psi( r ) );
-			base_pose.set_omega( r, rand2_pose.omega( r ) );
-		}
-		for (int r = rand_w2; r < rand_w2 + frag_; ++r){
-			base_pose.set_phi( r, rand3_pose.phi( r ) );
-			base_pose.set_psi( r, rand3_pose.psi( r ) );
-			base_pose.set_omega( r, rand3_pose.omega( r ) );
-		}
-		for (int r = rand_w3; r < rand_w3 + frag_; ++r){
-			base_pose.set_phi( r, storage_pose[i].phi( r ) );
-			base_pose.set_psi( r, storage_pose[i].psi( r ) );
-			base_pose.set_omega( r, storage_pose[i].omega( r ) );
-		}
 	
-	
-		///==================== @Fragment_assemble ========================
-		double baseEnergy( (*score_stage4_)(base_pose) );
+
 		double trialEnergy;
 		while ( trialTimes < 200 ){
 			trialPose = base_pose;
 			FragAssem_->apply( trialPose );
 			trialEnergy = (*score_stage4_)(trialPose);
-			if ( boltzmann_accept(baseEnergy, trialEnergy) )
+			if ( boltzmann_accept(population_energy[base], trialEnergy, KT_E) )
 				break;
 			++trialTimes;
 		}
 		if ( trialTimes >= 200 ){
 			trialPose = base_pose;
-			trialEnergy = baseEnergy;
+			trialEnergy = population_energy[base];
 		}
 		
 		///================= @Individual_Crowding ================ @Individual_Crowding ================
@@ -685,7 +648,7 @@ ClassicAbinitio::Multimodal_explore_Ephysi(vector< core::pose::Pose >& storage_p
 				population_Cscore[crow_index] = trialCscore;
 				
                 
-                out_rmsd_energy << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                // out_rmsd_energy << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose) << endl;
                 if (i == 0){
                     stringstream ss;
                     string str;
@@ -694,7 +657,7 @@ ClassicAbinitio::Multimodal_explore_Ephysi(vector< core::pose::Pose >& storage_p
                     ss << pdb_num1;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_one << pdb_num1 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_one << pdb_num1 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num1++;
                 }
                 if (i == 1){
@@ -705,7 +668,7 @@ ClassicAbinitio::Multimodal_explore_Ephysi(vector< core::pose::Pose >& storage_p
                     ss << pdb_num2;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_two << pdb_num2 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_two << pdb_num2 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num2++;
                 }
                 if (i == 2){
@@ -716,7 +679,7 @@ ClassicAbinitio::Multimodal_explore_Ephysi(vector< core::pose::Pose >& storage_p
                     ss << pdb_num3;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_thr << pdb_num3 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_thr << pdb_num3 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num3++;
                 }
                 
@@ -739,42 +702,42 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
 		int base( numeric::random::rg().random_range(0, NP_ - 1) );
 		core::pose::Pose base_pose( storage_pose[base] );
 		
-		///====================== @Fragment_recombination =====================
-		int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
-		int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
-		while ( base == i )
-			base = numeric::random::rg().random_range(0, NP_ - 1);
-		while ( rand2 == base || rand2 == i )
-			rand2 = numeric::random::rg().random_range(0, NP_ - 1);
-		while ( rand3 == base || rand3 == rand2 || rand3 == i )
-			rand3 = numeric::random::rg().random_range(0, NP_ - 1);
+		// ///====================== @Fragment_recombination =====================
+		// int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
+		// int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
+		// while ( base == i )
+		// 	base = numeric::random::rg().random_range(0, NP_ - 1);
+		// while ( rand2 == base || rand2 == i )
+		// 	rand2 = numeric::random::rg().random_range(0, NP_ - 1);
+		// while ( rand3 == base || rand3 == rand2 || rand3 == i )
+		// 	rand3 = numeric::random::rg().random_range(0, NP_ - 1);
 		
-		core::pose::Pose rand2_pose( storage_pose[rand2] );
-		core::pose::Pose rand3_pose( storage_pose[rand3] );
+		// core::pose::Pose rand2_pose( storage_pose[rand2] );
+		// core::pose::Pose rand3_pose( storage_pose[rand3] );
 		
-		int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		while ( rand_w2 == rand_w1 )
-			rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-		while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
-			rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+		// int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+		// int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+		// int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+		// while ( rand_w2 == rand_w1 )
+		// 	rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+		// while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
+		// 	rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
 		
-		for (int r = rand_w1; r < rand_w1 + frag_; ++r){
-			base_pose.set_phi( r, rand2_pose.phi( r ) );
-			base_pose.set_psi( r, rand2_pose.psi( r ) );
-			base_pose.set_omega( r, rand2_pose.omega( r ) );
-		}
-		for (int r = rand_w2; r < rand_w2 + frag_; ++r){
-			base_pose.set_phi( r, rand3_pose.phi( r ) );
-			base_pose.set_psi( r, rand3_pose.psi( r ) );
-			base_pose.set_omega( r, rand3_pose.omega( r ) );
-		}
-		for (int r = rand_w3; r < rand_w3 + frag_; ++r){
-			base_pose.set_phi( r, storage_pose[i].phi( r ) );
-			base_pose.set_psi( r, storage_pose[i].psi( r ) );
-			base_pose.set_omega( r, storage_pose[i].omega( r ) );
-		}
+		// for (int r = rand_w1; r < rand_w1 + frag_; ++r){
+		// 	base_pose.set_phi( r, rand2_pose.phi( r ) );
+		// 	base_pose.set_psi( r, rand2_pose.psi( r ) );
+		// 	base_pose.set_omega( r, rand2_pose.omega( r ) );
+		// }
+		// for (int r = rand_w2; r < rand_w2 + frag_; ++r){
+		// 	base_pose.set_phi( r, rand3_pose.phi( r ) );
+		// 	base_pose.set_psi( r, rand3_pose.psi( r ) );
+		// 	base_pose.set_omega( r, rand3_pose.omega( r ) );
+		// }
+		// for (int r = rand_w3; r < rand_w3 + frag_; ++r){
+		// 	base_pose.set_phi( r, storage_pose[i].phi( r ) );
+		// 	base_pose.set_psi( r, storage_pose[i].psi( r ) );
+		// 	base_pose.set_omega( r, storage_pose[i].omega( r ) );
+		// }
 	
 	
 		///==================== @Fragment_assemble ========================
@@ -784,7 +747,7 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
 			trialPose = base_pose;
 			FragAssem_->apply( trialPose );
 			trialEnergy = (*score_stage4_)(trialPose);
-			if ( boltzmann_accept(baseEnergy, trialEnergy) )
+			if ( boltzmann_accept(baseEnergy, trialEnergy, KT_E) )
 				break;
 			++trialTimes;
 		}
@@ -835,7 +798,7 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
 				population_Cscore[crow_index] = trialCscore;
 				
                                 
-                out_rmsd_energy << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                // out_rmsd_energy << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
                 if (i == 0){
                     stringstream ss;
                     string str;
@@ -844,7 +807,7 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
                     ss << pdb_num1;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_one << pdb_num1 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_one << pdb_num1 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num1++;
                 }
                 if (i == 1){
@@ -855,7 +818,7 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
                     ss << pdb_num2;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_two << pdb_num2 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_two << pdb_num2 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num2++;
                 }
                 if (i == 2){
@@ -866,7 +829,7 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
                     ss << pdb_num3;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_thr << pdb_num3 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_thr << pdb_num3 << '\t' << "exp- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num3++;
                 }
                 
@@ -880,60 +843,75 @@ ClassicAbinitio::Multimodal_explore(vector< core::pose::Pose >& storage_pose, ve
 
 void 
 ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vector< double >& population_energy, vector< double >& population_Cscore, int index_i){
-	KT_E = 5;
-	KT_C = 2;
+	KT_E = 10;
+	KT_C = 5;
 	int NP_ = population.size();
 	for ( int i = 0; i < NP_; ++i){
-		int base = 0;
-		core::pose::Pose base_pose;
-		
-		base = numeric::random::rg().random_range(0, NP_ - 1);
-		base_pose = population[base];
-		
+		int trialTimes ( 0 );
+		double baseEnergy;
+		int base( numeric::random::rg().random_range(0, NP_ - 1) );
+		core::pose::Pose base_pose( population[base] );
+
 		if( NP_ >= 4 ){
-			///====================== @Fragment_recombination =====================
-			int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
-			int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
-			while ( base == i )
-				base = numeric::random::rg().random_range(0, NP_ - 1);
-			while ( rand2 == base || rand2 == i )
-				rand2 = numeric::random::rg().random_range(0, NP_ - 1);
-			while ( rand3 == base || rand3 == rand2 || rand3 == i )
-				rand3 = numeric::random::rg().random_range(0, NP_ - 1);
-			
-			core::pose::Pose rand2_pose( population[rand2] );
-			core::pose::Pose rand3_pose( population[rand3] );
-			
-			int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			while ( rand_w2 == rand_w1 )
-				rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-			while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
-				rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-			
-			for (int r = rand_w1; r < rand_w1 + frag_; ++r){
-				base_pose.set_phi( r, rand2_pose.phi( r ) );
-				base_pose.set_psi( r, rand2_pose.psi( r ) );
-				base_pose.set_omega( r, rand2_pose.omega( r ) );
-			}
-			for (int r = rand_w2; r < rand_w2 + frag_; ++r){
-				base_pose.set_phi( r, rand3_pose.phi( r ) );
-				base_pose.set_psi( r, rand3_pose.psi( r ) );
-				base_pose.set_omega( r, rand3_pose.omega( r ) );
-			}
-			for (int r = rand_w3; r < rand_w3 + frag_; ++r){
-				base_pose.set_phi( r, population[i].phi( r ) );
-				base_pose.set_psi( r, population[i].psi( r ) );
-				base_pose.set_omega( r, population[i].omega( r ) );
+			while ( trialTimes < 50 ){
+				///====================== @Fragment_recombination =====================
+				int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
+				int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
+				while ( base == i )
+					base = numeric::random::rg().random_range(0, NP_ - 1);
+				while ( rand2 == base || rand2 == i )
+					rand2 = numeric::random::rg().random_range(0, NP_ - 1);
+				while ( rand3 == base || rand3 == rand2 || rand3 == i )
+					rand3 = numeric::random::rg().random_range(0, NP_ - 1);
+				
+				core::pose::Pose rand2_pose( population[rand2] );
+				core::pose::Pose rand3_pose( population[rand3] );
+				
+				int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				while ( rand_w2 == rand_w1 )
+					rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+				while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
+					rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+				
+				for (int r = rand_w1; r < rand_w1 + frag_; ++r){
+					base_pose.set_phi( r, rand2_pose.phi( r ) );
+					base_pose.set_psi( r, rand2_pose.psi( r ) );
+					base_pose.set_omega( r, rand2_pose.omega( r ) );
+				}
+				for (int r = rand_w2; r < rand_w2 + frag_; ++r){
+					base_pose.set_phi( r, rand3_pose.phi( r ) );
+					base_pose.set_psi( r, rand3_pose.psi( r ) );
+					base_pose.set_omega( r, rand3_pose.omega( r ) );
+				}
+				for (int r = rand_w3; r < rand_w3 + frag_; ++r){
+					base_pose.set_phi( r, population[i].phi( r ) );
+					base_pose.set_psi( r, population[i].psi( r ) );
+					base_pose.set_omega( r, population[i].omega( r ) );
+				}
+
+				baseEnergy = (*score_stage4_)(base_pose);
+				if ( boltzmann_accept(population_energy[base], baseEnergy, KT_E) ){
+					break;
+				}
+
+				++trialTimes;
 			}
 		}
+
+		if ( trialTimes >= 50 ){
+			base_pose = population[base];
+			baseEnergy = population_energy[base];
+		}
+		trialTimes = 0;
+
 		
 		///==================== @Fragment_assemble ========================
-		double baseEnergy( (*score_stage4_)(base_pose) );
+		// double baseEnergy( (*score_stage4_)(base_pose) );
 		core::pose::Pose trialPose;
 		double trialEnergy;
-		int trialTimes ( 0 );
+		
 		while ( trialTimes < 200 ){
 			trialPose = base_pose;
 			FragAssem_->apply( trialPose );
@@ -986,8 +964,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
 				population_energy[crow_index] = trialEnergy;
 				population_Cscore[crow_index] = trialCscore;
                 
-                out_rmsd_energy << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
-                
+                // out_rmsd_energy << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
                 if (index_i == index_one_i1 && i == index_one_j1){
                     stringstream ss;
                     string str;
@@ -996,7 +973,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num1;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_one << pdb_num1 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_one << pdb_num1 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num1++;
                 }
                 if (index_i == index_one_i2 && i == index_one_j2){
@@ -1007,7 +984,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num2;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_two << pdb_num2 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_two << pdb_num2 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num2++;
                 }
                 if (index_i == index_one_i3 && i == index_one_j3){
@@ -1018,7 +995,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num3;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_thr << pdb_num3 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_thr << pdb_num3 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num3++;
                 }
                 
@@ -1028,7 +1005,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
 				population_energy[crow_index] = trialEnergy;
 				population_Cscore[crow_index] = trialCscore;
 				
-                out_rmsd_energy << "ma2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                // out_rmsd_energy << "ma2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
 
                 if (index_i == index_one_i1 && i == index_one_j1){
                     stringstream ss;
@@ -1038,7 +1015,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num1;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_one << pdb_num1 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_one << pdb_num1 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num1++;
                 }
                 if (index_i == index_one_i2 && i == index_one_j2){
@@ -1049,7 +1026,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num2;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_two << pdb_num2 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_two << pdb_num2 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num2++;
                 }
                 if (index_i == index_one_i3 && i == index_one_j3){
@@ -1060,7 +1037,7 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
                     ss << pdb_num3;
                     ss >> str;
                     trialPose.dump_pdb(name+str+suf);
-                    out_thr << pdb_num3 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                    out_thr << pdb_num3 << '\t' << "ma1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 					pdb_num3++;
                 }
 			}
@@ -1068,134 +1045,79 @@ ClassicAbinitio::Multimodal_maintain(vector< core::pose::Pose >& population, vec
 	}
 }
 
-vector<core::pose::Pose> 
-ClassicAbinitio::Modal_merging(vector< core::pose::Pose >& population, vector< core::pose::Pose >& top_population, 
-			       vector<core::pose::Pose> &center_population, vector< vector<core::pose::Pose> > &vec_top_modal, double &cut_dmscore){
-	KT_E = 5;
-	int NP_ = population.size();
-	int NP_top = top_population.size();
-	vector<core::pose::Pose> merging_fail;
-	for ( int i = 0; i < NP_; ++i){
-		int base = 0;
-		core::pose::Pose base_pose;
-		base_pose = population[i];
-		
-		///====================== @Fragment_recombination =====================
-		int rand2( numeric::random::rg().random_range(0, NP_top - 1) );
-		int rand3( numeric::random::rg().random_range(0, NP_top - 1) );
-		while ( base == i )
-			base = numeric::random::rg().random_range(0, NP_top - 1);
-		while ( rand2 == base || rand2 == i )
-			rand2 = numeric::random::rg().random_range(0, NP_top - 1);
-		while ( rand3 == base || rand3 == rand2 || rand3 == i )
-			rand3 = numeric::random::rg().random_range(0, NP_top - 1);
-		
-		core::pose::Pose rand2_pose( top_population[rand2] );
-		core::pose::Pose rand3_pose( top_population[rand3] );
-		
-		int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-		while ( rand_w2 == rand_w1 )
-			rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-		
-		for (int r = rand_w1; r < rand_w1 + frag_; ++r){
-			base_pose.set_phi( r, rand2_pose.phi( r ) );
-			base_pose.set_psi( r, rand2_pose.psi( r ) );
-			base_pose.set_omega( r, rand2_pose.omega( r ) );
-		}
-		for (int r = rand_w2; r < rand_w2 + frag_; ++r){
-			base_pose.set_phi( r, rand3_pose.phi( r ) );
-			base_pose.set_psi( r, rand3_pose.psi( r ) );
-			base_pose.set_omega( r, rand3_pose.omega( r ) );
-		}
-		
-		///==================== @Fragment_assemble ========================
-		double baseEnergy( (*score_stage4_)(base_pose) );
-		core::pose::Pose trialPose;
-		double trialEnergy;
-		int trialTimes ( 0 );
-		while ( trialTimes < 200 ){
-			trialPose = base_pose;
-			FragAssem_->apply( trialPose );
-			trialEnergy = (*score_stage4_)(trialPose);
-			if ( boltzmann_accept(baseEnergy, trialEnergy, KT_E) )
-				break;
-			++trialTimes;
-		}
-		if ( trialTimes >= 200 ){
-			trialPose = base_pose;
-			trialEnergy = baseEnergy;
-		}
-		
-		vector<double> vec_trialPose;
-		for(Size k = 0; k < center_population.size(); k++)
-			vec_trialPose.push_back( DM_score(trialPose, center_population[k]) );
-		double max_vec_trialPose = *max_element(vec_trialPose.begin(), vec_trialPose.end());
-		int max_vec_trialPose_index = max_element(vec_trialPose.begin(), vec_trialPose.end())-vec_trialPose.begin();
-		
-		if(max_vec_trialPose >= cut_dmscore){
-			vec_top_modal[max_vec_trialPose_index].push_back(trialPose);
-			top_population.push_back(trialPose);
-		}
-		else
-			merging_fail.push_back(population[i]);
-	}
-	
-	
-	return merging_fail;
-}
 
 void 
 ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vector<double> &population_energy, vector<double> &population_Cscore, int enhance_g, int index_i){
 	int NP_ = population.size();
 	for ( int i = 0; i < NP_; ++i){
 		///====================== @Fragment_recombination =====================
+		int trialTimes ( 0 );
+		double baseEnergy;
 		int base( numeric::random::rg().random_range(0, NP_ - 1) );
 		while ( base == i )
 			base = numeric::random::rg().random_range(0, NP_ - 1);
 		core::pose::Pose base_pose( population[base] );
+
+
 		if( NP_ >= 4 ){
-			///====================== @Fragment_recombination =====================
-			int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
-			int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
-			while ( rand2 == base || rand2 == i )
-				rand2 = numeric::random::rg().random_range(0, NP_ - 1);
-			while ( rand3 == base || rand3 == rand2 || rand3 == i )
-				rand3 = numeric::random::rg().random_range(0, NP_ - 1);
-			
-			core::pose::Pose rand2_pose( population[rand2] );
-			core::pose::Pose rand3_pose( population[rand3] );
-			
-			int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
-			while ( rand_w2 == rand_w1 )
-				rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-			while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
-				rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
-			
-			for (int r = rand_w1; r < rand_w1 + frag_; ++r){
-				base_pose.set_phi( r, rand2_pose.phi( r ) );
-				base_pose.set_psi( r, rand2_pose.psi( r ) );
-				base_pose.set_omega( r, rand2_pose.omega( r ) );
-			}
-			for (int r = rand_w2; r < rand_w2 + frag_; ++r){
-				base_pose.set_phi( r, rand3_pose.phi( r ) );
-				base_pose.set_psi( r, rand3_pose.psi( r ) );
-				base_pose.set_omega( r, rand3_pose.omega( r ) );
-			}
-			for (int r = rand_w3; r < rand_w3 + frag_; ++r){
-				base_pose.set_phi( r, population[i].phi( r ) );
-				base_pose.set_psi( r, population[i].psi( r ) );
-				base_pose.set_omega( r, population[i].omega( r ) );
+			while ( trialTimes < 50 ){
+				///====================== @Fragment_recombination =====================
+				int rand2( numeric::random::rg().random_range(0, NP_ - 1) );
+				int rand3( numeric::random::rg().random_range(0, NP_ - 1) );
+				while ( base == i )
+					base = numeric::random::rg().random_range(0, NP_ - 1);
+				while ( rand2 == base || rand2 == i )
+					rand2 = numeric::random::rg().random_range(0, NP_ - 1);
+				while ( rand3 == base || rand3 == rand2 || rand3 == i )
+					rand3 = numeric::random::rg().random_range(0, NP_ - 1);
+				
+				core::pose::Pose rand2_pose( population[rand2] );
+				core::pose::Pose rand3_pose( population[rand3] );
+				
+				int rand_w1( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				int rand_w2( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				int rand_w3( numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1) );
+				while ( rand_w2 == rand_w1 )
+					rand_w2 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+				while ( rand_w3 == rand_w1 || rand_w3 == rand_w2 )
+					rand_w3 = numeric::random::rg().random_range(1, lenth_of_sequence - frag_ + 1);
+				
+				for (int r = rand_w1; r < rand_w1 + frag_; ++r){
+					base_pose.set_phi( r, rand2_pose.phi( r ) );
+					base_pose.set_psi( r, rand2_pose.psi( r ) );
+					base_pose.set_omega( r, rand2_pose.omega( r ) );
+				}
+				for (int r = rand_w2; r < rand_w2 + frag_; ++r){
+					base_pose.set_phi( r, rand3_pose.phi( r ) );
+					base_pose.set_psi( r, rand3_pose.psi( r ) );
+					base_pose.set_omega( r, rand3_pose.omega( r ) );
+				}
+				for (int r = rand_w3; r < rand_w3 + frag_; ++r){
+					base_pose.set_phi( r, population[i].phi( r ) );
+					base_pose.set_psi( r, population[i].psi( r ) );
+					base_pose.set_omega( r, population[i].omega( r ) );
+				}
+
+				baseEnergy = (*score_stage4_)(base_pose);
+				if ( boltzmann_accept(population_energy[base], baseEnergy, KT_E) ){
+					break;
+				}
+
+				++trialTimes;
 			}
 		}
+		if ( trialTimes >= 50 ){
+			base_pose = population[base];
+			baseEnergy = population_energy[base];
+		}
+
+		trialTimes = 0;
 		
 		///==================== @Fragment_assemble ========================
-		double baseEnergy( (*score_stage4_)(base_pose) );
+		// double baseEnergy( (*score_stage4_)(base_pose) );
 		core::pose::Pose trialPose;
 		double trialEnergy;
-		int trialTimes ( 0 );
+		
 		while ( trialTimes < 200 ){
 			trialPose = base_pose;
 			FragAssem_->apply( trialPose );
@@ -1227,7 +1149,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
 					Ave_Cscore = Average_score_of_Populatin( population_Cscore[i], trialCscore, Ave_Cscore, NP_ );
 					population_Cscore[i] = trialCscore;
                     
-                    out_rmsd_energy << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                    // out_rmsd_energy << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
                     
                     if (index_i == index_one_i1 && i == index_one_j1){
                         stringstream ss;
@@ -1237,7 +1159,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num1;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_one << pdb_num1 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_one << pdb_num1 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num1++;
 
 						out_int_pdb1 = trialPose;
@@ -1250,7 +1172,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num2;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_two << pdb_num2 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_two << pdb_num2 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num2++;
 
 						out_int_pdb2 = trialPose;
@@ -1263,7 +1185,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num3;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_thr << pdb_num3 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_thr << pdb_num3 << '\t' << "en1- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num3++;
 
 						out_int_pdb3 = trialPose;
@@ -1275,7 +1197,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
 					Ave_Cscore = Average_score_of_Populatin( population_Cscore[i], trialCscore, Ave_Cscore, NP_ );
 					population_Cscore[i] = trialCscore;
                     
-                    out_rmsd_energy << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                    // out_rmsd_energy << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 
                     if (index_i == index_one_i1 && i == index_one_j1){
                         stringstream ss;
@@ -1285,7 +1207,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num1;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_one << pdb_num1 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_one << pdb_num1 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num1++;
 
 						out_int_pdb1 = trialPose;
@@ -1298,7 +1220,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num2;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_two << pdb_num2 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_two << pdb_num2 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num2++;
 
 						out_int_pdb2 = trialPose;
@@ -1311,7 +1233,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num3;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_thr << pdb_num3 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_thr << pdb_num3 << '\t' << "en2- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num3++;
 
 						out_int_pdb3 = trialPose;
@@ -1327,7 +1249,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
 					population_energy[max_Cscore_Pose_index] = trialEnergy;
 					population_Cscore[max_Cscore_Pose_index] = trialCscore;
                     
-                    out_rmsd_energy << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                    // out_rmsd_energy << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
                     
                     if (index_i == index_one_i1 && i == index_one_j1){
                         stringstream ss;
@@ -1337,7 +1259,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num1;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_one << pdb_num1 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_one << pdb_num1 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num1++;
 
 						out_int_pdb1 = trialPose;
@@ -1350,7 +1272,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num2;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_two << pdb_num2 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_two << pdb_num2 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num2++;
 
 						out_int_pdb2 = trialPose;
@@ -1363,7 +1285,7 @@ ClassicAbinitio::Multimodal_enhance_c(vector<core::pose::Pose> &population, vect
                         ss << pdb_num3;
                         ss >> str;
                         trialPose.dump_pdb(name+str+suf);
-                        out_thr << pdb_num3 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << endl;
+                        out_thr << pdb_num3 << '\t' << "en3- " << '\t' << trialEnergy << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(trialPose)/lenth_of_sequence << endl;
 						pdb_num3++;
 
 						out_int_pdb3 = trialPose;
@@ -1450,8 +1372,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num1;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_one << pdb_num1 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_one << pdb_num1 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num1++;
                         }
                         if (i == 1){
@@ -1462,8 +1384,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num2;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_two << pdb_num2 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_two << pdb_num2 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num2++;
                         }
                         if (i == 2){
@@ -1474,8 +1396,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num3;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_thr << pdb_num3 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_thr << pdb_num3 << '\t' <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-3-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num3++;
                         }
                         
@@ -1550,8 +1472,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num1;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_one << pdb_num1 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_one << pdb_num1 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num1++;
 
                         }
@@ -1563,8 +1485,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num2;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_two << pdb_num2 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_two << pdb_num2 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num2++;
                         }
                         if (i == 2){
@@ -1575,8 +1497,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num3;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_thr << pdb_num3 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_thr << pdb_num3 << '\t' <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-C-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num3++;
                         }
                         
@@ -1652,8 +1574,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num1;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_one << pdb_num1 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_one << pdb_num1 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num1++;
                         }
                         if (i == 1){
@@ -1664,8 +1586,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num2;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_two << pdb_num2 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_two << pdb_num2 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num2++;
                         }
                         if (i == 2){
@@ -1676,8 +1598,8 @@ ClassicAbinitio::final_enhence(){
                             ss << pdb_num3;
                             ss >> str;
                             pose.dump_pdb(name+str+suf);
-                            out_thr << pdb_num3 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
-                            out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
+                            out_thr << pdb_num3 << '\t' <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter << '\t' << Distance_score(pose)/lenth_of_sequence << endl;
+                            // out_rmsd_energy <<"4-B-" << '\t' << (*score_stage4_)(pose) << '\t' << dm_score <<'\t'<< dm_score_no_inter<< endl;
 							pdb_num3++;
                         }
                         
