@@ -283,11 +283,9 @@ public:
 	void all_gen_pose(vector< vector<core::pose::Pose> > Vec_modal);
 	//############################我添加的（final enhance）相关的###################
 	//simple_moves::FragmentMoverOP FragAssem_;
-    ofstream out_rmsd_energy;
 	ofstream out_one;
 	ofstream out_two;
 	ofstream out_thr;
-    ofstream output;
 	ofstream out_inter;
 
 // 	void final_enhence();
@@ -300,6 +298,7 @@ public:
 	double again_calc();
 	Size max_vec_mean_index;
 	double max_vec_mean;
+	double energy_physi;
 	void Last_gen_pose();
 	
 	double Enhance_Distance_score(core::pose::Pose& pose);
